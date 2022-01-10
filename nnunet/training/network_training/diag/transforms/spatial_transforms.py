@@ -65,7 +65,7 @@ class SpatialTransformWithWeights(AbstractTransform):
                  border_mode_seg='constant', border_cval_seg=0, order_seg=0,
                  border_mode_weightmap='constant', border_cval_weightmap=0, order_weightmap=1,
                  random_crop=True, data_key="data",
-                 label_key="seg", p_el_per_sample=1, p_scale_per_sample=1, p_rot_per_sample=1,
+                 label_key="seg", weightmap_key="weightmap", p_el_per_sample=1, p_scale_per_sample=1, p_rot_per_sample=1,
                  independent_scale_for_each_axis=False, p_rot_per_axis:float=1, p_independent_scale_per_axis: int=1):
         self.independent_scale_for_each_axis = independent_scale_for_each_axis
         self.p_rot_per_sample = p_rot_per_sample
@@ -73,6 +73,7 @@ class SpatialTransformWithWeights(AbstractTransform):
         self.p_el_per_sample = p_el_per_sample
         self.data_key = data_key
         self.label_key = label_key
+        self.weightmap_key = weightmap_key
         self.patch_size = patch_size
         self.patch_center_dist_from_border = patch_center_dist_from_border
         self.do_elastic_deform = do_elastic_deform
@@ -100,6 +101,7 @@ class SpatialTransformWithWeights(AbstractTransform):
     def __call__(self, **data_dict):
         data = data_dict.get(self.data_key)
         seg = data_dict.get(self.label_key)
+        weightmap = data_dict.get(self.weightmap_key)
 
         if self.patch_size is None:
             if len(data.shape) == 4:
@@ -111,7 +113,7 @@ class SpatialTransformWithWeights(AbstractTransform):
         else:
             patch_size = self.patch_size
 
-        ret_val = augment_spatial(data, seg, patch_size=patch_size,
+        ret_val = augment_spatial(data, seg, weightmap, patch_size=patch_size,
                                   patch_center_dist_from_border=self.patch_center_dist_from_border,
                                   do_elastic_deform=self.do_elastic_deform, alpha=self.alpha, sigma=self.sigma,
                                   do_rotation=self.do_rotation, angle_x=self.angle_x, angle_y=self.angle_y,
@@ -131,7 +133,8 @@ class SpatialTransformWithWeights(AbstractTransform):
         data_dict[self.data_key] = ret_val[0]
         if seg is not None:
             data_dict[self.label_key] = ret_val[1]
-
+        if weightmap is not None:
+            data_dict[self.weightmap_key] = ret_val[2]
         return data_dict
 
 
@@ -238,7 +241,7 @@ def augment_spatial(data, seg, weightmap, patch_size, patch_center_dist_from_bor
                                                                         is_seg=True)
             if weightmap is not None:
                 for channel_id in range(weightmap.shape[1]):
-                    seg_result[sample_id, channel_id] = interpolate_img(weightmap[sample_id, channel_id], coords, order_weightmap,
+                    weightmap_result[sample_id, channel_id] = interpolate_img(weightmap[sample_id, channel_id], coords, order_weightmap,
                                                                         border_mode_weightmap, cval=border_cval_weightmap,
                                                                         is_seg=True)
 
@@ -259,6 +262,8 @@ def augment_spatial(data, seg, weightmap, patch_size, patch_center_dist_from_bor
             data_result[sample_id] = d[0]
             if seg is not None:
                 seg_result[sample_id] = s[0]
+            if weightmap is not None:
+                weightmap_result[sample_id] = w[0]
     return data_result, seg_result, weightmap_result
 
 

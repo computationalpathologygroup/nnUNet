@@ -29,7 +29,7 @@ except ImportError as ie:
 
 def get_moreDA_augmentation(dataloader_train, dataloader_val, patch_size, params=default_3D_augmentation_params,
                             border_val_seg=-1,
-                            seeds_train=None, seeds_val=None, order_seg=1, order_data=3, deep_supervision_scales=None,
+                            seeds_train=None, seeds_val=None, order_seg=0, order_data=3, deep_supervision_scales=None,
                             soft_ds=False,
                             classes=None, pin_memory=True, regions=None,
                             use_nondetMultiThreadedAugmenter: bool = False):
@@ -176,9 +176,10 @@ def get_moreDA_augmentation(dataloader_train, dataloader_val, patch_size, params
             assert classes is not None
             val_transforms.append(DownsampleSegForDSTransform3(deep_supervision_scales, 'target', 'target', classes))
         else:
-            val_transforms.append(DownsampleSegForDSTransform2(deep_supervision_scales, 0, input_key='target',
-                                                               output_key='target'))
-        raise NotImplementedError("Deep supervision downsampling for weightmaps is currently not supported")
+            val_transforms.append(DownsampleSegForDSTransform2(deep_supervision_scales, order=0, input_key='target',
+                                                               output_key='target', axes=None))
+    val_transforms.append(DownsampleSegForDSTransform2(ds_scales=deep_supervision_scales, order=1, input_key='weightmap',
+                                                      output_key='weightmap', axes=None))
 
     val_transforms.append(NumpyToTensor(['data', 'target', 'weightmap'], 'float'))
     val_transforms = Compose(val_transforms)
