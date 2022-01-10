@@ -92,7 +92,7 @@ def test_dataset_loading():
     with open(
         NNUNET_PREPROCESSING_DATA_DIR
         / HIPPOCAMPUS_TASK
-        / "nnUNetPlansv2.1_plans_3d.pkl",
+        / "nnUNetPlansv2.1_plans_3D.pkl",
         "rb",
     ) as f:
         plans = pickle.load(f)
