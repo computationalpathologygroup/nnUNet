@@ -195,42 +195,6 @@ class SoftDiceLoss(nn.Module):
         return -dc
 
 
-class SoftDiceLossWeighted(SoftDiceLoss):
-
-    def __init__(self, class_weights, *args, **kwargs):
-        super(SoftDiceLossWeighted, self).__init__(*args, **kwargs['soft_dice_kwargs'])
-        assert class_weights is not None, "Should supply class weights for this loss!"
-        self.class_weights = class_weights
-
-    def forward(self, x, y, loss_mask=None):
-        shp_x = x.shape
-
-        if self.batch_dice:
-            axes = [0] + list(range(2, len(shp_x)))
-        else:
-            axes = list(range(2, len(shp_x)))
-
-        if self.apply_nonlin is not None:
-            x = self.apply_nonlin(x)
-
-        tp, fp, fn, _ = get_tp_fp_fn_tn(x, y, axes, loss_mask, False)
-
-        nominator = 2 * tp + self.smooth
-        denominator = 2 * tp + fp + fn + self.smooth
-
-        dc = nominator / (denominator + 1e-8)
-        # dc *= self.class_weights
-
-        if not self.do_bg:
-            if self.batch_dice:
-                dc = dc[1:]
-            else:
-                dc = dc[:, 1:]
-        dc = dc.mean()
-
-        return -dc
-
-
 class MCCLoss(nn.Module):
     def __init__(self, apply_nonlin=None, batch_mcc=False, do_bg=True, smooth=0.0):
         """
@@ -465,12 +429,14 @@ class DC_and_topk_loss(nn.Module):
 
 class DCandCEWeightedLoss(DC_and_CE_loss):
 
-    def __init__(self, class_weights: List[float], weight_dc, weight_ce, soft_dice_kwargs, ce_kwargs):
+    def __init__(self, class_weights: List[float], weight_dc, weight_ce, soft_dice_kwargs, ce_kwargs,
+                 ignore_label=None):
         """
         Weighted version of the DC and CE loss combination.
         """
         super(DCandCEWeightedLoss, self).__init__(soft_dice_kwargs, ce_kwargs, weight_dice=weight_dc,
                                                   weight_ce=weight_ce)
+        self.ignore_label = ignore_label
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.class_weights = self.to_tensor(np.array(class_weights))
         self.dc = SoftDiceLoss(apply_nonlin=softmax_helper, **soft_dice_kwargs)
