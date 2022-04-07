@@ -322,8 +322,7 @@ class DC_and_CE_loss(nn.Module):
         self.weight_dice = weight_dice
         self.weight_ce = weight_ce
         self.aggregate = aggregate
-        self.ce = RobustCrossEntropyLoss(**ce_kwargs)
-        self.ce = RobustCrossEntropyLoss(ignore_index=ignore_label if ignore_label else -100, **ce_kwargs)
+        self.ce = RobustCrossEntropyLoss(ignore_index=ignore_label if ignore_label is not None else -100, **ce_kwargs)
 
         self.ignore_label = ignore_label
 
