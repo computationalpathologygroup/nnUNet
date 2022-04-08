@@ -112,7 +112,8 @@ def main():
     search_in = join(nnunet.__path__[0], "experiment_planning")
 
     if planner_name3d is not None:
-        planner_3d = recursive_find_python_class([search_in], planner_name3d, current_module="nnunet.experiment_planning")
+        planner_3d = recursive_find_python_class([search_in], planner_name3d,
+                                                 current_module="nnunet.experiment_planning")
         if planner_3d is None:
             raise RuntimeError("Could not find the Planner class %s. Make sure it is located somewhere in "
                                "nnunet.experiment_planning" % planner_name3d)
@@ -120,7 +121,8 @@ def main():
         planner_3d = None
 
     if planner_name2d is not None:
-        planner_2d = recursive_find_python_class([search_in], planner_name2d, current_module="nnunet.experiment_planning")
+        planner_2d = recursive_find_python_class([search_in], planner_name2d,
+                                                 current_module="nnunet.experiment_planning")
         if planner_2d is None:
             raise RuntimeError("Could not find the Planner class %s. Make sure it is located somewhere in "
                                "nnunet.experiment_planning" % planner_name2d)
@@ -131,16 +133,17 @@ def main():
         print("\n\n\n", t)
         cropped_out_dir = os.path.join(nnUNet_cropped_data, t)
         preprocessing_output_dir_this_task = os.path.join(preprocessing_output_dir, t)
-        #splitted_4d_output_dir_task = os.path.join(nnUNet_raw_data, t)
-        #lists, modalities = create_lists_from_splitted_dataset(splitted_4d_output_dir_task)
+        # splitted_4d_output_dir_task = os.path.join(nnUNet_raw_data, t)
+        # lists, modalities = create_lists_from_splitted_dataset(splitted_4d_output_dir_task)
 
         # we need to figure out if we need the intensity propoerties. We collect them only if one of the modalities is CT
         dataset_json = load_json(join(cropped_out_dir, 'dataset.json'))
         modalities = list(dataset_json["modality"].values())
         collect_intensityproperties = True if (("CT" in modalities) or ("ct" in modalities)) else False
-        dataset_analyzer = DatasetAnalyzer(cropped_out_dir, overwrite=False, num_processes=tf)  # this class creates the fingerprint
-        _ = dataset_analyzer.analyze_dataset(collect_intensityproperties)  # this will write output files that will be used by the ExperimentPlanner
-
+        dataset_analyzer = DatasetAnalyzer(cropped_out_dir, overwrite=False,
+                                           num_processes=tf)  # this class creates the fingerprint
+        _ = dataset_analyzer.analyze_dataset(
+            collect_intensityproperties)  # this will write output files that will be used by the ExperimentPlanner
 
         maybe_mkdir_p(preprocessing_output_dir_this_task)
         shutil_sol.copyfile(join(cropped_out_dir, "dataset_properties.pkl"), preprocessing_output_dir_this_task)
@@ -169,4 +172,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

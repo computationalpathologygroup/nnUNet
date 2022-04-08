@@ -19,6 +19,7 @@ import nnunet.utilities.shutil_sol as shutil_sol
 from batchgenerators.utilities.file_and_folder_operations import *
 from multiprocessing import Pool
 from collections import OrderedDict
+from pathlib import Path
 
 
 def create_nonzero_mask(data):
@@ -50,12 +51,12 @@ def crop_to_bbox(image, bbox):
 
 
 def get_case_identifier(case):
-    case_identifier = case[0].split("/")[-1].split(".nii.gz")[0][:-5]
+    case_identifier = "_".join(Path(case[0]).stem.split("_")[:-1])  # OS agnostic version
     return case_identifier
 
 
 def get_case_identifier_from_npz(case):
-    case_identifier = case.split("/")[-1][:-4]
+    case_identifier = Path(case).stem
     return case_identifier
 
 
@@ -118,7 +119,7 @@ def crop_to_nonzero(data, seg=None, nonzero_label=-1):
 
 
 def get_patient_identifiers_from_cropped_files(folder):
-    return [i.split("/")[-1][:-4] for i in subfiles(folder, join=True, suffix=".npz")]
+    return [Path(i).stem for i in subfiles(folder, join=True, suffix=".npz")]
 
 
 class ImageCropper(object):
@@ -161,7 +162,6 @@ class ImageCropper(object):
             if overwrite_existing \
                     or (not os.path.isfile(os.path.join(self.output_folder, "%s.npz" % case_identifier))
                         or not os.path.isfile(os.path.join(self.output_folder, "%s.pkl" % case_identifier))):
-
                 data, seg, properties = self.crop_from_list_of_files(case[:-1], case[-1])
 
                 all_data = np.vstack((data, seg))
