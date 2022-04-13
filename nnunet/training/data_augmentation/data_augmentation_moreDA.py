@@ -22,7 +22,8 @@ from batchgenerators.transforms.color_transforms import GammaTransform
 from batchgenerators.transforms.noise_transforms import GaussianNoiseTransform, GaussianBlurTransform
 from batchgenerators.transforms.resample_transforms import SimulateLowResolutionTransform
 from batchgenerators.transforms.spatial_transforms import SpatialTransform, MirrorTransform
-from batchgenerators.transforms.utility_transforms import RemoveLabelTransform, RenameTransform, NumpyToTensor
+from batchgenerators.transforms.utility_transforms import RemoveLabelTransform, RenameTransform, NumpyToTensor, \
+    AppendChannelsTransform
 
 from nnunet.training.data_augmentation.custom_transforms import Convert3DTo2DTransform, Convert2DTo3DTransform, \
     MaskTransform, ConvertSegmentationToRegionsTransform
@@ -47,6 +48,9 @@ def get_moreDA_augmentation(dataloader_train, dataloader_val, patch_size, params
     assert params.get('mirror') is None, "old version of params, use new keyword do_mirror"
 
     tr_transforms = []
+
+    if params.get("selected_data_channel_to_seg") is not None:
+        tr_transforms.append(AppendChannelsTransform('data', 'seg', params.get('selected_data_channel_to_seg')))
 
     if params.get("selected_data_channels") is not None:
         tr_transforms.append(DataChannelSelectionTransform(params.get("selected_data_channels")))
@@ -168,6 +172,9 @@ def get_moreDA_augmentation(dataloader_train, dataloader_val, patch_size, params
 
     val_transforms = []
     val_transforms.append(RemoveLabelTransform(-1, 0))
+
+    if params.get("selected_data_channel_to_seg") is not None:
+        val_transforms.append(AppendChannelsTransform('data', 'seg', params.get('selected_data_channel_to_seg')))
     if params.get("selected_data_channels") is not None:
         val_transforms.append(DataChannelSelectionTransform(params.get("selected_data_channels")))
     if params.get("selected_seg_channels") is not None:
@@ -207,4 +214,3 @@ def get_moreDA_augmentation(dataloader_train, dataloader_val, patch_size, params
     # batchgenerator_val = SingleThreadedAugmenter(dataloader_val, val_transforms)
 
     return batchgenerator_train, batchgenerator_val
-
