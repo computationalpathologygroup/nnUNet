@@ -438,9 +438,9 @@ class DCandCEWeightedLoss(DC_and_CE_loss):
                                                   weight_ce=weight_ce)
         self.ignore_label = ignore_label
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.class_weights = self.to_tensor(np.array(class_weights))
         self.dc = SoftDiceLoss(apply_nonlin=softmax_helper, **soft_dice_kwargs)
-        self.ce = RobustCrossEntropyLoss(weight=self.class_weights, ignore_index=ignore_label, **ce_kwargs)
+        self.ce = RobustCrossEntropyLoss(weight=self.to_tensor(np.array(class_weights)) if class_weights else None,
+                                         ignore_index=ignore_label if ignore_label is not None else -100, **ce_kwargs)
 
     def to_tensor(self, array):
         return torch.tensor(array, dtype=torch.float32, device=self.device)
