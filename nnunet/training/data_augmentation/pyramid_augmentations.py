@@ -15,7 +15,7 @@
 from copy import deepcopy
 
 from batchgenerators.transforms.abstract_transforms import AbstractTransform
-from skimage.morphology import label, ball
+from skimage.morphology import label, ball, disk
 from skimage.morphology.binary import binary_erosion, binary_dilation, binary_closing, binary_opening
 import numpy as np
 
@@ -118,8 +118,8 @@ class ApplyRandomBinaryOperatorTransform(AbstractTransform):
                 for c in ch:
                     if np.random.uniform() < self.p_per_label:
                         operation = np.random.choice(self.any_of_these)
-                        selem = ball(np.random.uniform(*self.strel_size))
                         workon = np.copy(data[b, c]).astype(int)
+                        selem = ball(np.random.uniform(*self.strel_size))  if workon.ndim == 3 else disk(np.random.uniform(*self.strel_size))
                         res = operation(workon, selem).astype(workon.dtype)
                         data[b, c] = res
 
