@@ -92,6 +92,26 @@ class MoveSegAsOneHotToData(AbstractTransform):
             data_dict[self.key_origin] = origin
         return data_dict
 
+class MoveSegToData(AbstractTransform):
+    def __init__(self, channels, key_origin="seg", key_target="data", remove_from_origin=True):
+        self.remove_from_origin = remove_from_origin
+        self.channels = channels
+        self.key_target = key_target
+        self.key_origin = key_origin
+
+    def __call__(self, **data_dict):
+        origin = data_dict.get(self.key_origin)
+        target = data_dict.get(self.key_target)
+        seg_channels = origin[:, self.channels]
+        target = np.concatenate((target, seg_channels), 1)
+        data_dict[self.key_target] = target
+
+        if self.remove_from_origin:
+            remaining_channels = [i for i in range(origin.shape[1]) if i not in self.channels]
+            origin = origin[:, remaining_channels]
+            data_dict[self.key_origin] = origin
+        return data_dict
+
 
 class ApplyRandomBinaryOperatorTransform(AbstractTransform):
     def __init__(self, channel_idx, p_per_sample=0.3, any_of_these=(binary_dilation, binary_erosion, binary_closing,

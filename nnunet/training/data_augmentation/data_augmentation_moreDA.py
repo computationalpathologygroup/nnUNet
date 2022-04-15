@@ -31,7 +31,7 @@ from nnunet.training.data_augmentation.default_data_augmentation import default_
 from nnunet.training.data_augmentation.downsampling import DownsampleSegForDSTransform3, DownsampleSegForDSTransform2
 from nnunet.training.data_augmentation.pyramid_augmentations import MoveSegAsOneHotToData, \
     ApplyRandomBinaryOperatorTransform, \
-    RemoveRandomConnectedComponentFromOneHotEncodingTransform
+    RemoveRandomConnectedComponentFromOneHotEncodingTransform, MoveSegToData
 
 try:
     from batchgenerators.dataloading.nondet_multi_threaded_augmenter import NonDetMultiThreadedAugmenter
@@ -121,7 +121,10 @@ def get_moreDA_augmentation(dataloader_train, dataloader_val, patch_size, params
     tr_transforms.append(RemoveLabelTransform(-1, 0))
 
     if params.get("move_last_seg_chanel_to_data") is not None and params.get("move_last_seg_chanel_to_data"):
-        tr_transforms.append(MoveSegAsOneHotToData(1, params.get("all_segmentation_labels"), 'seg', 'data'))
+        if params.get("move_as_one_hot_to_data"):
+            tr_transforms.append(MoveSegAsOneHotToData(1, params.get("all_segmentation_labels")))
+        else:
+            tr_transforms.append(MoveSegToData(params.get("all_segmentation_labels")))
         if params.get("cascade_do_cascade_augmentations") is not None and params.get(
                 "cascade_do_cascade_augmentations"):
             if params.get("cascade_random_binary_transform_p") > 0:
@@ -182,6 +185,9 @@ def get_moreDA_augmentation(dataloader_train, dataloader_val, patch_size, params
 
     if params.get("move_last_seg_chanel_to_data") is not None and params.get("move_last_seg_chanel_to_data"):
         val_transforms.append(MoveSegAsOneHotToData(1, params.get("all_segmentation_labels"), 'seg', 'data'))
+    else:
+        val_transforms.append(MoveSegToData(params.get("all_segmentation_labels")))
+
 
     val_transforms.append(RenameTransform('seg', 'target', True))
 
