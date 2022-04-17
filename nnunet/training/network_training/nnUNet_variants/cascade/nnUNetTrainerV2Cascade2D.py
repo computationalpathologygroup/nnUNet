@@ -44,9 +44,9 @@ class nnUNetTrainerV2Cascade2DSoftMax(nnUNetTrainerV2Cascade2D):
 
         # we have 2 channels now because the segmentation from the previous stage is stored in 'seg' as well until it
         # is moved to 'data' at the end
-        self.data_aug_params['selected_data_channel_to_seg'] = list(range(3, self.num_classes))  # This will be 0 or 1 in selected_seg_channels
-        self.data_aug_params['selected_seg_channels'] = [0] + list(range(1, self.num_classes))
+        self.data_aug_params['selected_data_channel_to_seg'] = list(range(3, self.num_classes + 1))  # This will be 0 or 1 in selected_seg_channels
+        self.data_aug_params['selected_seg_channels'] = [0] + list(range(1, self.num_classes + 1))
 
         self.data_aug_params['move_as_one_hot_to_data'] = False
         # needed for converting the segmentation from the previous stage to one hot
-        self.data_aug_params['all_segmentation_labels'] = list(range(1, self.num_classes))
+        self.data_aug_params['all_segmentation_labels'] = list(range(1, self.num_classes + 1))
