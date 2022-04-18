@@ -121,9 +121,9 @@ def get_moreDA_augmentation(dataloader_train, dataloader_val, patch_size, params
     tr_transforms.append(RemoveLabelTransform(-1, 0))
 
     if params.get("move_last_seg_chanel_to_data") is not None and params.get("move_last_seg_chanel_to_data"):
-        if params.get("move_as_one_hot_to_data") is not None and not params.get("move_as_one_hot_to_data"):
+        if params.get("is_already_one_hot_encoded") is not None and not params.get("is_already_one_hot_encoded"):
             tr_transforms.append(MoveSegAsOneHotToData(1, params.get("all_segmentation_labels")))
-        elif params.get("move_as_one_hot_to_data") is not None and not params.get("move_as_one_hot_to_data"):
+        elif params.get("is_already_one_hot_encoded") is not None and params.get("is_already_one_hot_encoded"):
             tr_transforms.append(MoveSegToData(params.get("all_segmentation_labels")))
         if params.get("cascade_do_cascade_augmentations") is not None and params.get(
                 "cascade_do_cascade_augmentations"):
@@ -184,9 +184,10 @@ def get_moreDA_augmentation(dataloader_train, dataloader_val, patch_size, params
         val_transforms.append(SegChannelSelectionTransform(params.get("selected_seg_channels")))
 
     if params.get("move_last_seg_chanel_to_data") is not None and params.get("move_last_seg_chanel_to_data"):
-        val_transforms.append(MoveSegAsOneHotToData(1, params.get("all_segmentation_labels"), 'seg', 'data'))
-    elif params.get("move_as_one_hot_to_data") is not None and not params.get("move_as_one_hot_to_data"):
-        val_transforms.append(MoveSegToData(params.get("all_segmentation_labels")))
+        if params.get("is_already_one_hot_encoded") is not None and not params.get("is_already_one_hot_encoded"):
+            val_transforms.append(MoveSegAsOneHotToData(1, params.get("all_segmentation_labels")))
+        elif params.get("is_already_one_hot_encoded") is not None and params.get("is_already_one_hot_encoded"):
+            val_transforms.append(MoveSegToData(params.get("all_segmentation_labels")))
 
 
     val_transforms.append(RenameTransform('seg', 'target', True))
