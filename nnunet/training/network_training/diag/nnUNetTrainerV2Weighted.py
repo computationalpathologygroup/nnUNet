@@ -196,7 +196,7 @@ class nnUNetTrainerV2Weighted(nnUNetTrainerV2):
                 self.optimizer.step()
 
         if run_online_evaluation:
-            print("Online evaluation doesn't taking weightmaps into account...")
+            print("Online evaluation doesn't take weightmaps into account...")
             self.run_online_evaluation(
                 output, target
             )  # TODO online eval with weight maps???
