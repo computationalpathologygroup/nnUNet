@@ -19,6 +19,7 @@ import nnunet.utilities.shutil_sol as shutil_sol
 from batchgenerators.utilities.file_and_folder_operations import *
 from multiprocessing import Pool
 from collections import OrderedDict
+import multiresolutionimageinterface as mir
 
 
 def create_nonzero_mask(data):
@@ -62,21 +63,23 @@ def get_case_identifier_from_npz(case):
 def load_case_from_list_of_files(data_files, seg_file=None):
     assert isinstance(data_files, list) or isinstance(data_files, tuple), "case must be either a list or a tuple"
     properties = OrderedDict()
-    data_itk = [sitk.ReadImage(f) for f in data_files]
+    # Create an image reader object
+    image_reader = mir.MultiResolutionImageReader()
+    data_itk = [image_reader.open(f) for f in data_files]
 
-    properties["original_size_of_raw_data"] = np.array(data_itk[0].GetSize())[[2, 1, 0]]
-    properties["original_spacing"] = np.array(data_itk[0].GetSpacing())[[2, 1, 0]]
+    properties["original_size_of_raw_data"] = np.array(data_itk[0].getDimensions())[[2, 1, 0]]
+    properties["original_spacing"] = np.array(data_itk[0].getSpacing())[[2, 1, 0]]
     properties["list_of_data_files"] = data_files
     properties["seg_file"] = seg_file
 
-    properties["itk_origin"] = data_itk[0].GetOrigin()
-    properties["itk_spacing"] = data_itk[0].GetSpacing()
-    properties["itk_direction"] = data_itk[0].GetDirection()
+    properties["itk_origin"] = (0,0)#data_itk[0].GetOrigin()
+    properties["itk_spacing"] = data_itk[0].getSpacing()
+    properties["itk_direction"] = (0,0) #data_itk[0].GetDirection()
 
-    data_npy = np.vstack([sitk.GetArrayFromImage(d)[None] for d in data_itk])
+    data_npy = np.vstack([d.getUCharPatch(0, 0, *image.getLevelDimensions(3), 3) for d in data_itk])
     if seg_file is not None:
-        seg_itk = sitk.ReadImage(seg_file)
-        seg_npy = sitk.GetArrayFromImage(seg_itk)[None].astype(np.float32)
+        seg_itk = image_reader.open(seg_file)
+        seg_npy = seg_itk.getUCharPatch(0, 0, *image.getLevelDimensions(3), 3).astype(np.float32)
     else:
         seg_npy = None
     return data_npy.astype(np.float32), seg_npy, properties
